@@ -1,0 +1,16 @@
+[package]
+name = "responder"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.57"
+base64-url = "1.4.13"
+lambda_http = "0.5.1"
+lazy_static = "1.4.0"
+tokio = { version = "1", features = ["full"] }
+trust-dns-proto = "0.21.2"
+trust-dns-resolver = "0.21.2"
+url = "2.2.2"

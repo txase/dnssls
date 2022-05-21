@@ -1,0 +1,24 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  Responder:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-responder
+      CodeUri: src/responder/
+      Handler: bootstrap.is.the.handler
+      Runtime: provided.al2
+      Architectures:
+        - arm64
+      MemorySize: 1536
+      Timeout: 3
+      FunctionUrlConfig:
+        AuthType: NONE
+    Metadata:
+      BuildMethod: makefile
+  ResponderLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${Responder}
+      RetentionInDays: 14
