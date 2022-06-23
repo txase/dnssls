@@ -1,0 +1,2 @@
+[workspace]
+members = ["src/deny_list_updater", "src/responder"]

@@ -22,3 +22,36 @@ Resources:
     Properties:
       LogGroupName: !Sub /aws/lambda/${Responder}
       RetentionInDays: 14
+  DenyListUpdater:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-deny-list-updater
+      CodeUri: src/deny_list_updater/
+      Handler: bootstrap.is.the.handler
+      Runtime: provided.al2
+      Architectures:
+        - arm64
+      MemorySize: 1536
+      Timeout: 300
+      Environment:
+        Variables:
+          RESPONDER_FUNCTION_NAME: !Ref Responder
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - lambda:GetFunction
+              - lambda:UpdateFunctionCode
+            Resource: !GetAtt Responder.Arn
+      Events:
+        Schedule:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 day)
+    Metadata:
+      BuildMethod: makefile
+  DenyListUpdaterLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${DenyListUpdater}
+      RetentionInDays: 14

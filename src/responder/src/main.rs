@@ -40,7 +40,10 @@ use trust_dns_proto::{
 };
 
 use trust_dns_resolver::{
-    error::ResolveErrorKind::NoRecordsFound,
+    error::ResolveErrorKind::{
+        NoRecordsFound,
+        Proto
+    },
     TokioAsyncResolver
 };
 
@@ -175,6 +178,10 @@ async fn respond(request: Request) -> Result<Response<Body>, lambda_http::Error>
             Err(err) => {
                 match err.kind() {
                     NoRecordsFound { .. } => {
+                        response.set_response_code(NXDomain);
+                    },
+                    Proto(_) => {
+                        println!("Invalid domain: {}", domain_without_last_period);
                         response.set_response_code(NXDomain);
                     },
                     _ => {
