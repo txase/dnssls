@@ -22,4 +22,9 @@ The Serverless Pi-hole is a [DNS sinkhole](https://en.wikipedia.org/wiki/DNS_Sin
 
 ## Instructions
 
-TBD
+1. You'll need an [AWS](https://aws.amazon.com) account. If you're new to AWS you can create an account [here](https://portal.aws.amazon.com/billing/signup).
+<br>
+<br>
+We recommend creating a new AWS account just for Serverless Pi-hole if you already have one, but you can also use an existing account. If you run Serverless Pi-hole in an existing account, you may cause throttling errors due to competition from [AWS Lambda](https://aws.amazon.com/lambda/) function executions from other applications.
+
+1. Choose an [AWS Region](https://aws.amazon.com/about-aws/global-infrastructure/regions_az/) near you to provision into. Any non-China, non-GovCloud region will work, but pick one close to your expected usage for the lowest latency.
