@@ -55,3 +55,103 @@ Resources:
     Properties:
       LogGroupName: !Sub /aws/lambda/${DenyListUpdater}
       RetentionInDays: 14
+  AppleDeviceProfileBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${AWS::StackName}-appledevi-${AWS::AccountId}
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+  AppleDeviceProfileBucketBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref AppleDeviceProfileBucket
+      PolicyDocument:
+        Id: RequireEncryptionInTransit
+        Version: '2012-10-17'
+        Statement:
+          - Principal: '*'
+            Action: '*'
+            Effect: Deny
+            Resource:
+              - !GetAtt AppleDeviceProfileBucket.Arn
+              - !Sub ${AppleDeviceProfileBucket.Arn}/*
+            Condition:
+              Bool:
+                aws:SecureTransport: 'false'
+  AppleDeviceProfileDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        DefaultCacheBehavior:
+          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+          Compress: true
+          TargetOriginId: default
+          ViewerProtocolPolicy: redirect-to-https
+        Enabled: true
+        DefaultRootObject: index.html
+        PriceClass: PriceClass_100
+        Origins:
+          - DomainName: !GetAtt AppleDeviceProfileBucket.RegionalDomainName
+            Id: default
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${AppleDeviceProfileDistributionOriginAccessIdentity}
+  AppleDeviceProfileDistributionOriginAccessIdentity:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: Access to bucket
+  AppleDeviceProfileDistributionBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref AppleDeviceProfileBucket
+      PolicyDocument:
+        Id: AllowCloudFrontAccess
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${AppleDeviceProfileDistributionOriginAccessIdentity}
+            Action: s3:GetObject
+            Resource: !Sub ${AppleDeviceProfileBucket.Arn}/*
+  AppleDeviceProfilePublisher:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-apple-device-profile-publisher
+      CodeUri: src/apple_device_profile_publisher/
+      Handler: bootstrap.is.the.handler
+      Runtime: provided.al2
+      Architectures:
+        - arm64
+      MemorySize: 1536
+      Timeout: 3
+      Environment:
+        Variables:
+          APPLE_DEVICE_PROFILE_BUCKET_NAME: !Ref AppleDeviceProfileBucket
+          RESOLVER_URL: !GetAtt ResponderUrl.FunctionUrl
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref AppleDeviceProfileBucket
+    Metadata:
+      BuildMethod: makefile
+  AppleDeviceProfilePublisherLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${AppleDeviceProfilePublisher}
+      RetentionInDays: 14
+  AppleDeviceProfile:
+    Type: Custom::FunctionDeployTrigger
+    Properties:
+      ServiceToken: !GetAtt AppleDeviceProfilePublisher.Arn
+      Version: 0.0.1
+
+Outputs:
+  AppleDeviceProfileURL:
+    Description: Navigate to this URL on an Apple device to install DNS settings
+    Value: !Sub https://${AppleDeviceProfileDistribution.DomainName}/dns.mobileconfig
+  DNSURL:
+    Description: DNS-over-HTTPS URL
+    Value: !GetAtt ResponderUrl.FunctionUrl

@@ -1,2 +1,2 @@
 [workspace]
-members = ["src/deny_list_updater", "src/responder"]
+members = ["src/apple_device_profile_publisher", "src/deny_list_updater", "src/responder"]
