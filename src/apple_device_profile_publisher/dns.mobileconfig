@@ -24,6 +24,21 @@
 				<key>ServerURL</key>
 				<string>##RESOLVER_URL##</string>
 			</dict>
+			<key>OnDemandRules</key>
+			<array>
+				<!-- Enable our DNS if we can reach the public internet -->
+				<dict>
+					<key>URLStringProbe</key>
+					<string>https://captive.apple.com/hotspot-detect.html</string>
+					<key>Action</key>
+					<string>Connect</string>
+				</dict>
+				<!-- Disable our DNS otherwise -->
+				<dict>
+					<key>Action</key>
+					<string>Disconnect</string>
+				</dict>
+			</array>
 		</dict>
 	</array>
 	<key>PayloadDisplayName</key>
