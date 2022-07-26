@@ -14,6 +14,7 @@ use std::{
 use anyhow::Result;
 
 use lambda_http::{
+    http::Method,
     request::RequestContext::{
         ApiGatewayV1,
         ApiGatewayV2
@@ -117,9 +118,9 @@ async fn respond(request: Request) -> Result<Response<Body>, lambda_http::Error>
 
     println!("Received request from Client IP: {}", ip);
 
-    let message = match request.method().as_str() {
-        "GET" => message_from_get(request).await,
-        "POST" => message_from_post(request).await,
+    let message = match *request.method() {
+        Method::GET => message_from_get(request).await,
+        Method::POST => message_from_post(request).await,
         _ => return Ok(Response::builder()
                 .status(StatusCode::METHOD_NOT_ALLOWED)
                 .body(Body::from(()))?)
