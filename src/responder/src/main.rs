@@ -134,7 +134,8 @@ async fn respond(request: Request) -> Result<Response<Body>, lambda_http::Error>
                     println!("Bad request: {}", err.message());
                     Ok(Response::builder()
                         .status(StatusCode::BAD_REQUEST)
-                        .body(Body::from(format!("Bad request: {}", err.message())))?)
+                        .header("Content-Type", "text/plain")
+                        .body(Body::from(format!("Bad request: {}\n", err.message())))?)
                 },
                 None => {
                     println!("Failed to process request: {}", err);
