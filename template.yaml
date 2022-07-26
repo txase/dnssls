@@ -146,7 +146,7 @@ Resources:
     Type: Custom::FunctionDeployTrigger
     Properties:
       ServiceToken: !GetAtt AppleDeviceProfilePublisher.Arn
-      Version: 0.0.1
+      Version: 0.0.2
 
 Outputs:
   AppleDeviceProfileURL:

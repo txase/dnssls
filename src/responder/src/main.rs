@@ -118,6 +118,15 @@ async fn respond(request: Request) -> Result<Response<Body>, lambda_http::Error>
 
     println!("Received request from Client IP: {}", ip);
 
+    if request.method() == Method::GET && request.uri().path() == "/reachable" {
+        println!("Received reachability request, done!");
+        return Ok(Response::builder()
+            .status(StatusCode::OK)
+            .header("Content-Type", "text/plain")
+            .body(Body::from("Ok\n"))?
+        );
+    };
+
     let message = match *request.method() {
         Method::GET => message_from_get(request).await,
         Method::POST => message_from_post(request).await,

@@ -29,7 +29,7 @@
 				<!-- Enable our DNS if we can reach the public internet -->
 				<dict>
 					<key>URLStringProbe</key>
-					<string>https://captive.apple.com/hotspot-detect.html</string>
+					<string>##RESOLVER_URL##reachable</string>
 					<key>Action</key>
 					<string>Connect</string>
 				</dict>
