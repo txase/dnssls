@@ -127,6 +127,7 @@ async fn put_mobile_config(s3_client: &aws_sdk_s3::Client, version: &str) -> Res
         .bucket(bucket_name)
         .key(MOBILE_CONFIG_FILENAME)
         .content_type("application/x-apple-aspen-config")
+        .cache_control("public, must-revalidate, proxy-revalidate, max-age=0")
         .body(ByteStream::from(device_profile_contents.as_bytes().to_vec()))
         .send()
         .await?;
