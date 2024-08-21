@@ -8,7 +8,7 @@ Resources:
       FunctionName: !Sub ${AWS::StackName}-responder
       CodeUri: src/responder/
       Handler: bootstrap.is.the.handler
-      Runtime: provided.al2
+      Runtime: provided.al2023
       Architectures:
         - arm64
       MemorySize: 1536
@@ -28,7 +28,7 @@ Resources:
       FunctionName: !Sub ${AWS::StackName}-deny-list-updater
       CodeUri: src/deny_list_updater/
       Handler: bootstrap.is.the.handler
-      Runtime: provided.al2
+      Runtime: provided.al2023
       Architectures:
         - arm64
       MemorySize: 1536
@@ -123,7 +123,7 @@ Resources:
       FunctionName: !Sub ${AWS::StackName}-apple-device-profile-publisher
       CodeUri: src/apple_device_profile_publisher/
       Handler: bootstrap.is.the.handler
-      Runtime: provided.al2
+      Runtime: provided.al2023
       Architectures:
         - arm64
       MemorySize: 1536
