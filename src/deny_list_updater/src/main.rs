@@ -1,6 +1,5 @@
 use std::{
-    env,
-    io::{
+    collections::HashSet, env, io::{
         Cursor,
         Write
     }
@@ -37,17 +36,23 @@ async fn handler(_: LambdaEvent<Value>) -> Result<(), Error> {
 
     let package_future = get_code_package(&responder_function_name, &lambda_client);
     let deny_list_future = get_deny_list();
+    let allow_list_future = get_allow_list();
 
     let package = package_future.await?;
     let deny_list = deny_list_future.await?;
+    let allow_list = allow_list_future.await?;
 
-    println!("Downloaded code and deny list");
+    println!("Downloaded code and allow/deny lists");
 
-    let deny_list = simplify_deny_list(deny_list)?;
+    let mut deny_list_string = "".to_string();
+    for domain in deny_list.difference(&allow_list) {
+        deny_list_string.push_str(domain);
+        deny_list_string.push('\n');
+    }
 
     println!("Simplified deny list");
 
-    let package = update_code_package(package, deny_list)?;
+    let package = update_code_package(package, deny_list_string)?;
 
     println!("Finished writing zip to buffer");
 
@@ -79,32 +84,42 @@ async fn get_code_package(responder_function_name: &str, lambda_client: &aws_sdk
     )
 }
 
-async fn get_deny_list() -> Result<String, Error> {
-    const DENY_LIST_URL: &str = "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts";
+async fn get_deny_list() -> Result<HashSet<String>, Error> {
+    const DENY_LIST_URL: &'static str = "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts";
 
     let bytes = reqwest::get(DENY_LIST_URL).await?
         .bytes().await?;
 
-    Ok(std::str::from_utf8(&bytes)?.to_string())
-}
+    let hosts = std::str::from_utf8(&bytes)?;
 
-fn simplify_deny_list(deny_list: String) -> Result<String, Error> {
-    let simplify_re = Regex::new(r"(?m)^0.0.0.0 .*$")?;
+    let simplify_re = Regex::new(r"(?m)^0.0.0.0 (.*)$").unwrap();
 
-    let mut simplified = String::with_capacity(deny_list.len());
+    let mut deny_list = HashSet::new();
 
-    for line in simplify_re.find_iter(&deny_list) {
-        let domain = &deny_list[line.start() + 8..line.end()];
-
-        if domain.ne("0.0.0.0") {
-            simplified.push_str(domain);
-            simplified.push('\n');
-        }
+    for (_, [domain]) in simplify_re.captures_iter(hosts).map(|captures| captures.extract()) {
+        deny_list.insert(domain.to_string());
     }
 
-    simplified.pop();
+    Ok(deny_list)
+}
 
-    Ok(simplified)
+async fn get_allow_list() -> Result<HashSet<String>, Error> {
+    const ALLOW_LIST_URL: &'static str = "https://raw.githubusercontent.com/NChaves/pi-hole/main/adBlockListGetAdmiral_ABP.txt";
+
+    let bytes = reqwest::get(ALLOW_LIST_URL).await?
+        .bytes().await?;
+
+    let hosts = std::str::from_utf8(&bytes)?;
+
+    let simplify_re = Regex::new(r"(?m)^\|\|(.*)\^$").unwrap();
+
+    let mut allow_list = HashSet::new();
+
+    for (_, [domain]) in simplify_re.captures_iter(hosts).map(|captures| captures.extract()) {
+        allow_list.insert(domain.to_string());
+    }
+
+    Ok(allow_list)
 }
 
 fn update_code_package(package: Vec<u8>, deny_list: String) -> Result<Vec<u8>, Error> {
