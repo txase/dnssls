@@ -115,6 +115,10 @@ async fn get_allow_list() -> Result<HashSet<String>, Error> {
 
     let mut allow_list = HashSet::new();
 
+    // Manually add allow-listed domains
+    // adsafeprotected.com is used on eater.com
+    allow_list.insert("static.adsafeprotected.com".to_string());
+
     for (_, [domain]) in simplify_re.captures_iter(hosts).map(|captures| captures.extract()) {
         allow_list.insert(domain.to_string());
     }
